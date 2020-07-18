@@ -2,7 +2,6 @@
 # ruby
 # frozen_string_literal: true
 
-require 'tty-prompt'
 require 'optparse'
 require 'bundler/inline'
 
@@ -10,14 +9,19 @@ require 'bundler/inline'
 gemfile do
   source 'https://rubygems.org'
   gem 'tty-prompt', '~> 0.21.0'
+  gem 'colorize'
+  gem 'tty-box'
 end
+require 'tty-prompt'
+require 'tty-box'
+require 'colorize'
 
-prompt = TTY::Prompt.new
+prompt = TTY::Prompt.new(interrupt: :exit)
 
-options = {}
 OptionParser.new do |parser|
-  parser.on('-n', '--name NAME', 'The name of the person') do |value|
-    options[:name] = value
+  parser.on('init', '--init', 'Init app') do
+    system 'figlet -w 100 -c Basic   CLI | lolcat -a -d 1 '
+    prompt.select('Choose your destiny?'.colorize(:yellow), %w[Scorpion Kano Jax])
   end
 
   parser.on('-p', '--prompt', 'diffent type of prompt') do
@@ -102,6 +106,35 @@ OptionParser.new do |parser|
 
   parser.on('-e', '--error', 'Error message') do
     # ? -> error message
-    prompt.error('❌ Error')
+    prompt.error('🩸 error')
+  end
+
+  parser.on('-r', '--response', 'Respond with key events') do
+    # ? -> error message
+    prompt.yes?('Are you Human?') do |q|
+      q.suffix 'Yup/nope'
+      prompt.on(:keydown) do |key|
+        prompt.trigger(:keydown)
+        p 'okay' if key.value == 'y'
+      end
+    end
+  end
+
+  parser.on('-x', '--xcolor', 'Colors') do
+    # ? -> all colors
+    String.colors.each { |color| puts color.to_s.colorize(color) }
+  end
+
+  parser.on('-b', '--box', 'Colors') do
+    # ? -> box
+    box = TTY::Box.frame(
+      width: 30,
+      height: 10,
+      align: :center,
+      padding: 3
+    ) do
+      'Drawing'.colorize(:yellow)
+    end
+    print box
   end
 end.parse!
